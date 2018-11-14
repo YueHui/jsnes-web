@@ -1,7 +1,7 @@
 const SCREEN_WIDTH = 256;
 const SCREEN_HEIGHT = 240;
 
-class Canvas{
+export default class Canvas{
 	constructor(canvasId){
 		this.canvas = document.getElementById(canvasId);
 		this.context = this.canvas.getContext("2d");
@@ -17,20 +17,27 @@ class Canvas{
 		this.buf8 = new Uint8ClampedArray(this.buf);
 		this.buf32 = new Uint32Array(this.buf);
 
-
 		// Set alpha
-		for (var i = 0; i < this.buf32.length; ++i) {
+		for (let i = 0; i < this.buf32.length; ++i) {
 			this.buf32[i] = 0xff000000;
 		}
 
-		this.nes = new jsnes.NES({
-			onFrame: function (frameBuffer) {
-				_this.setBuffer(frameBuffer);
-			},
-			onStatusUpdate: console.log,
-			onAudioSample: function (left, right) {
-				// ... play audio sample
+		this.startFrame();
+	}
+
+	setBuffer(buffer) {
+		let i = 0;
+		for (let y = 0; y < SCREEN_HEIGHT; ++y) {
+			for (let x = 0; x < SCREEN_WIDTH; ++x) {
+				i = y * 256 + x;
+				// Convert pixel from NES BGR to canvas ABGR
+				this.buf32[i] = 0xff000000 | buffer[i]; // Full alpha
 			}
-		});
+		}
+	}
+
+	writeBuffer() {
+		this.imageData.data.set(this.buf8);
+		this.context.putImageData(this.imageData, 0, 0);
 	}
 }
